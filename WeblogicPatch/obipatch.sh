@@ -6,7 +6,7 @@
 #               -s|--startup : 1 If server start is required. Set this 0 if not required.
 #
 #
-# Purpose     : To patch weblogic server on EXA
+# Purpose     : To patch OBIEE application on EXA environment
 #               All environments variables must be set before running this script
 #
 # Author      : Abhijee Nazar
@@ -24,7 +24,8 @@ usage: $0 options
 OPTIONS:
    -i|--install         Install patch number
    -s|--startup         1 If server start is required. Set this 0 if not required.
-   ./wls_patch.sh -i NUM --startup 0
+   -O|--OH              Oracle Home to patch
+   ./wls_patch.sh       -i NUM --startup 0 --OH /u01/app/obiee1/Middleware_OBIEE/Oracle_BI1
 EOF
 }
 
