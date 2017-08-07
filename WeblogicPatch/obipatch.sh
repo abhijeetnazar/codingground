@@ -1,7 +1,8 @@
 #!/bin/sh
-########################################################################################
+#####################################################################################################
 # Program     : obipatch.sh
 # Parameters  : -i|--install ID: Patch switch along with ID to install
+#               -O|--OH Oracle Home to patch
 #               -s|--startup : 1 If server start is required. Set this 0 if not required.
 #
 #
@@ -11,8 +12,8 @@
 # Author      : Abhijee Nazar
 # Date        : 29-07-2016
 #
-# Example     : obipatch.sh -i DEM4 --startup 0
-#######################################################################################
+# Example     : obipatch.sh -i 17081528 --startup 0 --OH /u01/app/obiee1/Middleware_OBIEE/Oracle_BI1
+#####################################################################################################
 
 #Display usage of script
 usage()
