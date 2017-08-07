@@ -106,7 +106,7 @@ echo "Using WL_HOME as $WL_HOME"
 echo "Using INSTANCE_HOME as $INSTANCE_HOME"
 echo "Make sure to upload patch on Artifactory and check filename of patch."
 
-if [ $# -lt 5 ]
+if [ $# -lt 4 ]
  then
   echo "Insufficnent arguments..."
   echo "Please check usage"
@@ -121,10 +121,6 @@ key="$1"
 case $key in
     -i|--install)
         INSTALL="$2"
-        shift # past argument
-        ;;
-    -d|--deinstall)
-        SEARCHPATH="$2"
         shift # past argument
         ;;
     -s|--startup)
