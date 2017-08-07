@@ -37,7 +37,7 @@ setvariables()
     export ORACLE_HOME=$MW_HOME/Oracle_BI1
     MEM_ARGS="-Xms256m -Xmx4096m"
 
-    
+
 }
 
 #Check if folder are available
@@ -47,7 +47,7 @@ checkfolders()
         echo "Patch Directory does not exists"
         exit
     fi
-    
+
     if [ ! -d "${ORACLE_HOME}" ]; then
         echo "Oracle Home not set correctly"
         exit
@@ -60,12 +60,12 @@ checkfolders()
 patchobiee()
 {
     echo "Status of patches"
-    opatch lsinventory
+    $ORACLE_HOME/OPatch/opatch lsinventory
     echo "Installing New patch from ${OOD_FOLDER}/${INSTALL}"
 
     echo "Installing  patch" = ${INSTALL}
     cd ${OOD_FOLDER}/${INSTALL}
-    opatch napply -silent
+    $ORACLE_HOME/OPatch/opatch napply -silent -OH $OH
 
 }
 
@@ -106,7 +106,7 @@ echo "Using WL_HOME as $WL_HOME"
 echo "Using INSTANCE_HOME as $INSTANCE_HOME"
 echo "Make sure to upload patch on Artifactory and check filename of patch."
 
-if [ $# -lt 4 ]
+if [ $# -lt 5 ]
  then
   echo "Insufficnent arguments..."
   echo "Please check usage"
@@ -117,7 +117,8 @@ fi
 while [[ $# -gt 1 ]]
 do
 key="$1"
-
+if [[ "$key" = "-i" || "$key" == "--install" || "$key" = "-s" || "$key" = "--startup" || "$key" = "-O" || "$key" = "--OH" ]]
+then
 case $key in
     -i|--install)
         INSTALL="$2"
@@ -125,6 +126,10 @@ case $key in
         ;;
     -s|--startup)
         STARTUP="$2"
+        shift # past argument
+        ;;
+    -O|--OH)
+        OH="$2"
         shift # past argument
         ;;
     \?)
@@ -139,6 +144,11 @@ case $key in
         ;;
 esac
 shift # past argument or value
+else
+        echo "Invalid option: -$OPTARG" >&2
+        usage
+        exit 1
+fi
 done
 
 #Start of the script
@@ -150,6 +160,6 @@ checkfolders
 #Step 2 After confirmation stop all Weblogic and OBIEE services
 #stopweblogic
 #Step 3 Start patching
-#patchobiee
+patchobiee
 #Step 4 Start Weblogic and OBIEE
 #startweblogic
