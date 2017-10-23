@@ -38,9 +38,19 @@ setvariables()
     export PATCH_NAME=$INSTALL.zip
     export ORACLE_HOME=$MW_HOME/Oracle_BI1
     MEM_ARGS="-Xms256m -Xmx4096m"
-
-
 }
+
+#Check if patch is already downloaded.
+checkdownload()
+{
+     if [ -d  "${OOD_FOLDER}/${INSTALL}" ];  then
+        echo "=========================================="
+        echo "File Already exists so skip download part."
+        echo "=========================================="
+        downloadpatch=0
+     fi
+}
+
 
 #Check if folder are available
 checkfolders()
@@ -95,18 +105,33 @@ stopweblogic()
 
 downloadpatches()
 {
-    wget --no-check-certificate -O $PATCH_NAME --header 'X-JFrog-Art-Api: AKCp5Z2YADdVf2X8Sdy375VRuHqTGxXnuWTU6aAmPaWfG1BhgehxsKiNDJMYoPCCZ99iCU7fc' "https://artifactory.ing.net/artifactory/releases_generic_FSO_AM_REPORTING/patches/$PATCH_NAME"
+    wget --no-check-certificate -O $PATCH_NAME --header 'X-JFrog-Art-Api: AKCp5Z2hayUKnbKQaJ8cBv9QEXvMDn82r23bJupFXH4yusL4vueMwQiXj7tfnXeQHiU1rM9dG' "https://artifactory.ing.net/artifactory/releases_generic_FSO_AM_REPORTING/BINARIES/OBIEE/OBIEE_PATCHES/$PATCH_NAME"
+     if [ $? -eq 0 ]; then
+        echo "Patch downloaded..."
+    else
+        echo "Failed"
+        exit
+    fi
     #unzip $PATCH_NAME -d $INSTALL
     jar xvf $PATCH_NAME
 
 }
 
-
-echo "Using ORACLE_HOME as $ORACLE_HOME"
-echo "Using MW_HOME as $MW_HOME"
-echo "Using WL_HOME as $WL_HOME"
-echo "Using INSTANCE_HOME as $INSTANCE_HOME"
-echo "Make sure to upload patch on Artifactory and check filename of patch."
+if [ ! -z "$MW_HOME" ] && [ ! -z "$ORACLE_HOME" ] && [ ! -z "$INSTANCE_HOME" ]
+then
+        echo "Using ORACLE_HOME as $ORACLE_HOME"
+        echo "Using MW_HOME as $MW_HOME"
+        echo "Using WL_HOME as $WL_HOME"
+        echo "Using INSTANCE_HOME as $INSTANCE_HOME"
+        echo "Make sure to upload patch on Artifactory and check filename of patch."
+else
+        echo "Variables are not set properly. Check below variables"
+        echo "Using ORACLE_HOME as $ORACLE_HOME"
+        echo "Using MW_HOME as $MW_HOME"
+        echo "Using WL_HOME as $WL_HOME"
+        echo "Using INSTANCE_HOME as $INSTANCE_HOME"
+        exit 1
+fi
 
 if [ $# -lt 5 ]
  then
@@ -155,13 +180,26 @@ done
 
 #Start of the script
 setvariables
+
+#Check if patch already downloaded
+checkdownload
+
 #Download Patches from artifactory
-downloadpatches
+if [[ "$downloadpatch" != 0 ]]; then
+    downloadpatches
+fi
+
 #Step 1 check all folder are available
 checkfolders
+
 #Step 2 After confirmation stop all Weblogic and OBIEE services
-#stopweblogic
+stopweblogic
+
 #Step 3 Start patching
 patchobiee
+
 #Step 4 Start Weblogic and OBIEE
-#startweblogic
+if [[ "$STARTUP" == 1 ]]; then
+    startweblogic
+fi
+
