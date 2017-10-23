@@ -38,64 +38,95 @@ setvariables()
     export OOD_FOLDER=.
     export PATCH_NAME=$INSTALL.zip
     MEM_ARGS="-Xms256m -Xmx4096m"
-    
+
 }
 
 #Check if folder are available
 checkfolders()
 {
     if [ ! -d  "${OOD_FOLDER}/${INSTALL}" ]; then
+        echo "=========================="
         echo "Directory does not exists"
+        echo "=========================="
         exit
     fi
 }
+
+#Check if patch is already downloaded
+checkdownload()
+{
+     if [ -d  "${OOD_FOLDER}/${INSTALL}" ];  then
+        echo "=========================================="
+        echo "File Already exists so skip download part."
+        echo "=========================================="
+        downloadpatch=0
+     fi
+}
+
 
 
 #Start Patching
 patchweblogic()
 {
-   echo "Copy patches to download folder"
+    echo "==============================="
+    echo "Copy patches to download folder"
     cp -r ${OOD_FOLDER}/${INSTALL}/* ${MW_HOME}/utils/bsu/cache_dir
-    
+
     cd ${MW_HOME}/utils/bsu
-    
+
     echo "Status of patches"
     $JAVA_HOME/bin/java ${MEM_ARGS} -jar ${PATCH_CLIENT} -view -status=applied -prod_dir=${WL_HOME}
-    
+
     echo "Deinstall patch" = ${DEINSTALL}
     $JAVA_HOME/bin/java ${MEM_ARGS} -jar ${PATCH_CLIENT} -remove -patchlist=${DEINSTALL} -prod_dir=${WL_HOME}
-    
+
     echo "Install patch" = ${INSTALL}
     $JAVA_HOME/bin/java ${MEM_ARGS} -jar ${PATCH_CLIENT} -install -patch_download_dir=${MW_HOME}/utils/bsu/cache_dir -patchlist=${INSTALL} -prod_dir=${WL_HOME}
+    echo "==============================="
 
 }
 
 startweblogic()
 {
-     if [ ! -f ${HOME}/bin/rc.obi ]; then
-            echo "Using rc.obia to start services"
-            rc.obia start
+    if [ ! -f ${HOME}/bin/rc.obi ]; then
+        echo "==============================="
+        echo "Using rc.obia to start services"
+        rc.obia start
+        echo "==============================="
     else
-            echo "Using rc.obi to start services"
-            rc.obi start
+        echo "==============================="
+        echo "Using rc.obi to start services"
+        rc.obi start
+        echo "==============================="
     fi
 }
 
 stopweblogic()
 {
     if [ ! -f ${HOME}/bin/rc.obi ]; then
+        echo "==============================="
         echo "Using rc.obia to stop services"
         rc.obia stop
+        echo "==============================="
+
     else
+        echo "==============================="
         echo "Using rc.obi to stop services"
         rc.obi stop
+        echo "==============================="
     fi
 }
 
 downloadpatches()
 {
-    wget --no-check-certificate -O $PATCH_NAME --header 'X-JFrog-Art-Api: AKCp5Z2YADdVf2X8Sdy375VRuHqTGxXnuWTU6aAmPaWfG1BhgehxsKiNDJMYoPCCZ99iCU7fc' "https://artifactory.ing.net/artifactory/releases_generic_FSO_AM_REPORTING/patches/$PATCH_NAME"
-    unzip $PATCH_NAME -d $INSTALL
+    wget --no-check-certificate -O $PATCH_NAME --header 'X-JFrog-Art-Api: AKCp5Z2hayUKnbKQaJ8cBv9QEXvMDn82r23bJupFXH4yusL4vueMwQiXj7tfnXeQHiU1rM9dG' "https://artifactory.ing.net/artifactory/releases_generic_FSO_AM_REPORTING/BINARIES/WLS/WLS_PATCHES/$PATCH_NAME"
+    if [ $? -eq 0 ]; then
+        echo "Patch downloaded..."
+    else
+        echo "Failed"
+        exit
+    fi
+    unzip -o $PATCH_NAME -d $INSTALL
 }
 
 
@@ -122,7 +153,7 @@ case $key in
         shift # past argument
         ;;
     -d|--deinstall)
-        SEARCHPATH="$2"
+        DEINSTALL="$2"
         shift # past argument
         ;;
     -s|--startup)
@@ -143,15 +174,33 @@ esac
 shift # past argument or value
 done
 
+echo $INSTALL
+echo $DEINSTALL
+
 #Start of the script
 setvariables
+
+#Check if patch already downloaded
+checkdownload
+
 #Download Patches from artifactory
-downloadpatches
+if [[ "$downloadpatch" != 0 ]]; then
+   downloadpatches
+fi
+
 #Step 1 check all folder are available
 checkfolders
+
 #Step 2 After confirmation stop all Weblogic and OBIEE services
-#stopweblogic
+if [[ "$STARTUP" == 1 ]]; then
+    stopweblogic
+fi
+
+
 #Step 3 Start patching
-#patchweblogic
+patchweblogic
+
 #Step 4 Start Weblogic and OBIEE
-#startweblogic
+if [[ "$STARTUP" == 1 ]]; then
+    startweblogic
+fi
